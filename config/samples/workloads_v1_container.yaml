@@ -1,0 +1,8 @@
+apiVersion: workloads.operator.io/v1
+kind: Container
+metadata:
+  name: nginx
+spec:
+  replicas: 3
+  image: nginx:latest
+  host: linux.local
