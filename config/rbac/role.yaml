@@ -24,6 +24,17 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - workloads.operator.io
   resources:
   - containers

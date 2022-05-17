@@ -19,12 +19,13 @@ package controllers
 import (
 	"context"
 
-	appsV1 "k8s.io/api/apps/v1"
-	coreV1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -45,6 +46,7 @@ type ContainerReconciler struct {
 //+kubebuilder:rbac:groups=workloads.operator.io,resources=containers/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+//+kubebuilder:rbac:groups=core,resources=services,verbs=list;watch;get;patch;create;update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -58,61 +60,45 @@ func (r *ContainerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	log := logger.FromContext(ctx)
 
 	// Fetch the Container instance
-	container := &workloadsv1.Container{}
-	err := r.Get(ctx, req.NamespacedName, container)
+	container := workloadsv1.Container{}
+	err := r.Get(ctx, req.NamespacedName, &container)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("Container resource not found. Ignoring since object must be deleted.")
-			// Object not found, return.  Created objects are automatically garbage collected.
-			// For additional cleanup logic use finalizers.
-			return reconcile.Result{}, nil
-		}
-
-		log.Info("Unable to fetch Container resource...")
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
 
 	log.Info("r.Get", "App.Namespace", container.Namespace, "App.Name", container.Name)
 
-	deployment := appsV1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      container.Name + "-deployment",
-			Namespace: container.Namespace,
-		},
-		Spec: appsV1.DeploymentSpec{
-			Replicas: container.Spec.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": container.Name,
-				},
-			},
-			Template: coreV1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app": container.Name,
-					},
-				},
-				Spec: coreV1.PodSpec{
-					Containers: []coreV1.Container{
-						{
-							Name:  "app",
-							Image: container.Spec.Image,
-						},
-					},
-				},
-			},
-		},
+	deployment, err := r.newDeployment(container)
+	if err != nil {
+		log.Error(err, "newDeployment failed")
+
+		return ctrl.Result{}, err
 	}
 
-	log.Info("setControllerReference", "App.Namespace", container.Namespace, "App.Name", container.Name)
+	log.Info("newDeployment", "App.Namespace", container.Namespace, "App.Name", container.Name)
 
-	err = controllerutil.SetControllerReference(container, &deployment, r.Scheme)
+	service, err := r.newService(container)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	found := &appsV1.Deployment{}
+	log.Info("newService", "App.Namespace", container.Namespace, "App.Name", container.Name)
+
+	applyOpts := []client.PatchOption{client.ForceOwnership, client.FieldOwner(service.Name + "-controller")}
+
+	err = r.Patch(ctx, &deployment, client.Apply, applyOpts...)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	log.Info("r.Patch -deployment", "App.Namespace", container.Namespace, "App.Name", container.Name)
+
+	err = r.Patch(ctx, &service, client.Apply, applyOpts...)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	log.Info("r.Patch -service", "App.Namespace", container.Namespace, "App.Name", container.Name)
+
+	found := &appsv1.Deployment{}
 
 	err = r.Get(ctx, types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -143,10 +129,85 @@ func (r *ContainerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
+func (r *ContainerReconciler) newDeployment(container workloadsv1.Container) (appsv1.Deployment, error) {
+	deployment := appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: appsv1.SchemeGroupVersion.String(),
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      container.Name + "-deployment",
+			Namespace: container.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: container.Spec.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": container.Name,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": container.Name,
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "app",
+							Image: container.Spec.Image,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err := controllerutil.SetControllerReference(&container, &deployment, r.Scheme)
+	if err != nil {
+		return deployment, err
+	}
+
+	return deployment, nil
+}
+
+func (r *ContainerReconciler) newService(container workloadsv1.Container) (corev1.Service, error) {
+	service := corev1.Service{
+		TypeMeta: metav1.TypeMeta{APIVersion: corev1.SchemeGroupVersion.String(), Kind: "Service"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      container.Name + "-service",
+			Namespace: container.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Protocol:   "TCP",
+					Port:       8080,
+					TargetPort: intstr.FromInt(80),
+				},
+			},
+			Selector: map[string]string{
+				"app": container.Name,
+			},
+			Type: corev1.ServiceTypeLoadBalancer,
+		},
+	}
+
+	err := controllerutil.SetControllerReference(&container, &service, r.Scheme)
+	if err != nil {
+		return service, err
+	}
+
+	return service, nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ContainerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&workloadsv1.Container{}).
-		Owns(&appsV1.Deployment{}).
+		Owns(&corev1.Service{}).
+		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }

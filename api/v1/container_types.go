@@ -33,6 +33,7 @@ type ContainerSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Image is the Docker image of the App.
+	// +kubebuilder:default="nginx:latest"
 	Image string `json:"image"`
 
 	// Host where the application is accessible.

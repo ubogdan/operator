@@ -39,6 +39,7 @@ spec:
                 description: Host where the application is accessible.
                 type: string
               image:
+                default: nginx:latest
                 description: Image is the Docker image of the App.
                 type: string
               replicas:
