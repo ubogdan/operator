@@ -6,3 +6,5 @@ spec:
   replicas: 3
   image: nginx:latest
   host: linux.local
+#  port: 80
+#  clusterIssuer: letsencrypt

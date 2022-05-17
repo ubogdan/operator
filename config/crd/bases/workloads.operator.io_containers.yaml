@@ -35,6 +35,10 @@ spec:
           spec:
             description: ContainerSpec defines the desired state of Container
             properties:
+              clusterIssuer:
+                default: letsencrypt
+                description: ClusterIssuer Certificate manager cluster-issuer name
+                type: string
               host:
                 description: Host where the application is accessible.
                 type: string

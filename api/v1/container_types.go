@@ -33,7 +33,7 @@ type ContainerSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Image is the Docker image of the App.
-	// +kubebuilder:default="nginx:latest"
+	//+kubebuilder:default="nginx:latest"
 	Image string `json:"image"`
 
 	// Host where the application is accessible.
@@ -42,6 +42,11 @@ type ContainerSpec struct {
 	// Port where the application is accessible.
 	// +kubebuilder:default=80
 	Port int32 `json:"port,omitempty"`
+
+	// ClusterIssuer Certificate manager cluster-issuer name
+	//+optional
+	//+kubebuilder:default="letsencrypt"
+	ClusterIssuer string `json:"clusterIssuer"`
 }
 
 // ContainerStatus defines the observed state of Container

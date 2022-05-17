@@ -208,7 +208,6 @@ func (r *ContainerReconciler) newService(container workloadsv1.Container) (corev
 			Selector: map[string]string{
 				"app": container.Name,
 			},
-			Type: corev1.ServiceTypeLoadBalancer,
 		},
 	}
 
@@ -232,6 +231,7 @@ func (r *ContainerReconciler) newIngress(container workloadsv1.Container) (netv1
 			Namespace: container.Namespace,
 			Annotations: map[string]string{
 				"nginx.ingress.kubernetes.io/use-regex": "true",
+				"cert-manager.io/cluster-issuer":        container.Spec.ClusterIssuer,
 			},
 		},
 		Spec: netv1.IngressSpec{
@@ -256,6 +256,14 @@ func (r *ContainerReconciler) newIngress(container workloadsv1.Container) (netv1
 							},
 						},
 					},
+				},
+			},
+			TLS: []netv1.IngressTLS{
+				{
+					Hosts: []string{
+						container.Spec.Host,
+					},
+					SecretName: container.Name + "-tls",
 				},
 			},
 		},
