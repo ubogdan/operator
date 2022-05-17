@@ -38,6 +38,10 @@ type ContainerSpec struct {
 
 	// Host where the application is accessible.
 	Host string `json:"host"`
+
+	// Port where the application is accessible.
+	// +kubebuilder:default=80
+	Port int32 `json:"port,omitempty"`
 }
 
 // ContainerStatus defines the observed state of Container

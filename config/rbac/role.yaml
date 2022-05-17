@@ -35,6 +35,12 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+- apiGroups:
   - workloads.operator.io
   resources:
   - containers

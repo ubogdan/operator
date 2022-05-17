@@ -42,6 +42,11 @@ spec:
                 default: nginx:latest
                 description: Image is the Docker image of the App.
                 type: string
+              port:
+                default: 80
+                description: Port where the application is accessible.
+                format: int32
+                type: integer
               replicas:
                 description: The number of replicas that the deployment should have
                 format: int32

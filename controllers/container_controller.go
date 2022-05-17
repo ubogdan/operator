@@ -21,6 +21,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	netv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,6 +48,7 @@ type ContainerReconciler struct {
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 //+kubebuilder:rbac:groups=core,resources=services,verbs=list;watch;get;patch;create;update
+//+kubebuilder:rbac:groups=core,resources=services/status,verbs=get
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -81,8 +83,14 @@ func (r *ContainerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-
 	log.Info("newService", "App.Namespace", container.Namespace, "App.Name", container.Name)
+
+	ingress, err := r.newIngress(container)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	log.Info("newIngress", "App.Namespace", container.Namespace, "App.Name", container.Name)
 
 	applyOpts := []client.PatchOption{client.ForceOwnership, client.FieldOwner(service.Name + "-controller")}
 
@@ -98,11 +106,17 @@ func (r *ContainerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	log.Info("r.Patch -service", "App.Namespace", container.Namespace, "App.Name", container.Name)
 
+	err = r.Patch(ctx, &ingress, client.Apply, applyOpts...)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	log.Info("r.Patch -ingress", "App.Namespace", container.Namespace, "App.Name", container.Name)
+
 	found := &appsv1.Deployment{}
 
 	err = r.Get(ctx, types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		log.V(1).Info("Creating Deployment", "deployment", deployment.Name)
+		log.Info("Creating Deployment", "deployment", deployment.Name)
 
 		err = r.Create(ctx, &deployment)
 		if err != nil {
@@ -116,7 +130,7 @@ func (r *ContainerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	if found.Spec.Replicas != deployment.Spec.Replicas {
 		found.Spec.Replicas = deployment.Spec.Replicas
-		log.V(1).Info("Updating Deployment", "deployment", deployment.Name)
+		log.Info("Updating Deployment", "deployment", deployment.Name)
 
 		err = r.Update(ctx, found)
 		if err != nil {
@@ -174,7 +188,10 @@ func (r *ContainerReconciler) newDeployment(container workloadsv1.Container) (ap
 
 func (r *ContainerReconciler) newService(container workloadsv1.Container) (corev1.Service, error) {
 	service := corev1.Service{
-		TypeMeta: metav1.TypeMeta{APIVersion: corev1.SchemeGroupVersion.String(), Kind: "Service"},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Service",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      container.Name + "-service",
 			Namespace: container.Namespace,
@@ -203,11 +220,61 @@ func (r *ContainerReconciler) newService(container workloadsv1.Container) (corev
 	return service, nil
 }
 
+func (r *ContainerReconciler) newIngress(container workloadsv1.Container) (netv1.Ingress, error) {
+	pathTypePrefix := netv1.PathTypePrefix
+	ingress := netv1.Ingress{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: netv1.SchemeGroupVersion.String(),
+			Kind:       "Ingress",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      container.Name + "-ingress",
+			Namespace: container.Namespace,
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/use-regex": "true",
+			},
+		},
+		Spec: netv1.IngressSpec{
+			Rules: []netv1.IngressRule{
+				{
+					Host: container.Spec.Host,
+					IngressRuleValue: netv1.IngressRuleValue{
+						HTTP: &netv1.HTTPIngressRuleValue{
+							Paths: []netv1.HTTPIngressPath{
+								{
+									Path:     "/",
+									PathType: &pathTypePrefix,
+									Backend: netv1.IngressBackend{
+										Service: &netv1.IngressServiceBackend{
+											Name: container.Name + "-service",
+											Port: netv1.ServiceBackendPort{
+												Number: 8080,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err := controllerutil.SetControllerReference(&container, &ingress, r.Scheme)
+	if err != nil {
+		return ingress, err
+	}
+
+	return ingress, nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ContainerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&workloadsv1.Container{}).
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&netv1.Ingress{}).
 		Complete(r)
 }
