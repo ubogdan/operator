@@ -12,7 +12,6 @@
 
 * Setup Kind with ingress controller enabled
 ```shell
-```shell
 cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -76,7 +75,6 @@ cd operator
 #### Setup
 * Setup Kind with ingress controller enabled
 ```shell
-```shell
 cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -112,7 +110,6 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 kubectl apply -f samples/cert-manager.yaml
 ```
 * Run the operator (development mode)
-```shell
 ```shell
 make install run
 ```
