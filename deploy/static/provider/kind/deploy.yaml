@@ -353,7 +353,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: ubogdan/operator:v1.0.0
+        image: ubogdan/operator:v1.0.1
         livenessProbe:
           httpGet:
             path: /healthz
