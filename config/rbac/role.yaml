@@ -41,6 +41,24 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingress/status
+  verbs:
+  - get
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - workloads.operator.io
   resources:
   - containers
