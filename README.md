@@ -1,4 +1,7 @@
 # Operator
+
+[![Release](https://img.shields.io/github/release/ubogdan/operator.svg?style=flat-square)](https://github.com/ubogdan/operator/releases)
+
 ## Running the Operator
 ### Requirements
 
@@ -48,7 +51,7 @@ kubectl apply -f samples/cert-manager.yaml
 
 * Deploy the operator
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/ubogdan/operators/deploy/static/provider/kind/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/ubogdan/operator/main/deploy/static/provider/kind/deploy.yaml
 ```
 
 ## Setting up Your Development Environment
