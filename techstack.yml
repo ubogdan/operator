@@ -1,7 +1,8 @@
 repo_name: ubogdan/operator
-report_id: 5e03f32cdf7e64d5ba079cd1576263a7
+report_id: 43d647a408f93cbd96df728004085374
+version: 0.1
 repo_type: Public
-timestamp: '2023-12-14T09:58:37+00:00'
+timestamp: '2024-01-04T15:14:48+00:00'
 requested_by: ubogdan
 provider: github
 branch: main
@@ -17,6 +18,7 @@ tools:
   category: Languages & Frameworks
   sub_category: Languages
   image_url: https://img.stackshare.io/service/1005/O6AczwfV_400x400.png
+  detection_source_url: https://github.com/ubogdan/operator
   detection_source: Repo Metadata
 - name: Protobuf
   description: Google's data interchange format
@@ -26,6 +28,7 @@ tools:
   category: Languages & Frameworks
   sub_category: Serialization Frameworks
   image_url: https://img.stackshare.io/service/4393/ma2jqJKH_400x400.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -37,6 +40,7 @@ tools:
   category: Data Stores
   sub_category: Database Tools
   image_url: https://img.stackshare.io/service/109221/default_b888cdf5617d936aa6aacf130911906955508639.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/hack/boilerplate.go.txt
   detection_source: hack/boilerplate.go.txt
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -49,6 +53,7 @@ tools:
   category: Build, Test, Deploy
   sub_category: Virtual Machine Platforms & Containers
   image_url: https://img.stackshare.io/service/586/n4u37v9t_400x400.png
+  detection_source_url: https://github.com/ubogdan/operator
   detection_source: Repo Metadata
 - name: Git
   description: Fast, scalable, distributed revision control system
@@ -58,6 +63,7 @@ tools:
   category: Build, Test, Deploy
   sub_category: Version Control System
   image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/ubogdan/operator
   detection_source: Repo Metadata
 - name: GitHub Actions
   description: Automate your workflow from idea to production
@@ -67,6 +73,7 @@ tools:
   category: Build, Test, Deploy
   sub_category: Continuous Integration
   image_url: https://img.stackshare.io/service/11563/actions.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/.github/workflows/publish.yaml
   detection_source: ".github/workflows/publish.yaml"
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-18 06:29:36.000000000 Z
@@ -80,6 +87,7 @@ tools:
   category: Build, Test, Deploy
   sub_category: Container Tools
   image_url: https://img.stackshare.io/service/1885/21_d3cvM.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -93,6 +101,7 @@ tools:
   category: Monitoring
   sub_category: Monitoring Tools
   image_url: https://img.stackshare.io/service/2501/default_3cf1b307194b26782be5cb209d30360580ae5b3c.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -104,6 +113,7 @@ tools:
   category: Communications
   sub_category: Large Language Model Tools
   image_url: https://img.stackshare.io/service/48790/default_5b6c6b73f1ff3775c85d2a1ba954cb87e30cbf13.jpg
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/hack/boilerplate.go.txt
   detection_source: hack/boilerplate.go.txt
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -146,6 +156,7 @@ tools:
   category: Libraries
   sub_category: Go Modules Packages
   image_url: https://img.stackshare.io/package/go-packages/image.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -230,6 +241,7 @@ tools:
   category: Libraries
   sub_category: Go Modules Packages
   image_url: https://img.stackshare.io/package/go-packages/image.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -352,6 +364,7 @@ tools:
   category: Libraries
   sub_category: Go Modules Packages
   image_url: https://img.stackshare.io/package/go-packages/image.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
@@ -627,6 +640,7 @@ tools:
   category: Libraries
   sub_category: Go Modules Packages
   image_url: https://img.stackshare.io/package/go-packages/image.png
+  detection_source_url: https://github.com/ubogdan/operator/blob/main/go.mod
   detection_source: go.mod
   last_updated_by: Bogdan Ungureanu
   last_updated_on: 2022-05-17 14:16:06.000000000 Z
